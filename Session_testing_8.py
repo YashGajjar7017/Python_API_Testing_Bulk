@@ -95,7 +95,7 @@ API_ENDPOINTS = [
     {"sr": 3, "name": "UUID Checking Single-phase", "url": "http://192.168.4.1/api/config/parameters", "method": "POST", "roles": {"System Admin": ["Write"]}, "payload": {"vdinterval": 5, "table": 1, "parameters": []}},
     {"sr": 4, "name": "UUID Checking Single-phase(Get)", "url": "http://192.168.4.1/api/config/parameters?table=1", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 5, "name": "ISP Configuration API", "url": "http://192.168.4.1/api/config/isp", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": {"apn": "airtelgprs.com", "apn2": "airtelgprs.com", "current_sim": "1"}},
-    {"sr": 6, "name": "Get ISP Configuration", "url": "http://192.168.4.1/api/config/ISP", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
+    {"sr": 6, "name": "Get ISP Configuration", "url": "http://192.168.4.1/api/config/isp", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 7, "name": "Remote Server Configuration API", "url": "http://192.168.4.1/api/config/remote-server", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": {"server_url": "rms.iotscada-pmsg.com", "server_port": 8883, "solution_type": "ongridrooftop", "client_id": "d:866738083608743$ongridrooftop$510017", "username": "866738083608743$ongridrooftop$510017", "password": "31c1074a", "server_url1": "rms.iotscada-pmsg.com", "server_port1": 8883, "solution_type1": "ongridrooftop", "client_id1": "d:866082075799828$ongridrooftop$500092", "username1": "866082075799828$ongridrooftop$500092", "password1": "466b856f", "imei": "866738083608743", "imei1": "866082075799828"}},
     {"sr": 8, "name": "Remote Server Configuration Read API", "url": "http://192.168.4.1/api/config/remote-server", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 10, "name": "Secure Broker Connection Trigger & Status API", "url": "http://192.168.4.1/api/device/broker/connect", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": {"action": "connect"}},
@@ -120,7 +120,7 @@ class RMSDeviceTesterApp:
     def __init__(self, root):
         self.root = root
         self.root.title("RMS Device Direct AP Suite")
-        self.root.geometry("1350x850")
+        self.root.geometry("1550x850")
 
         self.execution_results = []
         self.cancel_event = threading.Event()
@@ -131,7 +131,7 @@ class RMSDeviceTesterApp:
         setup_frame.pack(fill="x", padx=10, pady=5)
 
         ttk.Label(setup_frame, text="Username (AP Name):").grid(row=0, column=0, sticky="w", padx=3)
-        self.ap_name_var = tk.StringVar(value="RMS-2088")
+        self.ap_name_var = tk.StringVar(value="RMS-2074")
         ttk.Entry(setup_frame, textvariable=self.ap_name_var, width=12).grid(row=0, column=1, padx=3)
 
         ttk.Label(setup_frame, text="Role:").grid(row=0, column=2, sticky="w", padx=3)
@@ -469,10 +469,10 @@ class RMSDeviceTesterApp:
 
             # Delay before next request
             if idx < len(apis_to_run) - 1:
-                for remaining in range(10, 0, -1):
+                for remaining in range(5, 0, -1):
                     if self.cancel_event.is_set():
                         break
-                    self.update_status(f"Waiting 10s delay... ({remaining}s remaining before next API)")
+                    self.update_status(f"Waiting 5s delay... ({remaining}s remaining before next API)")
                     time.sleep(1)
 
         if not self.cancel_event.is_set():
