@@ -1,5 +1,3 @@
-# pip install -r requirements.txt
-
 import os
 import time
 import json
@@ -97,7 +95,7 @@ API_ENDPOINTS = [
     {"sr": 3, "name": "UUID Checking Single-phase", "url": "http://192.168.4.1/api/config/parameters", "method": "POST", "roles": {"System Admin": ["Write"]}, "payload": {"vdinterval": 5, "table": 1, "parameters": []}},
     {"sr": 4, "name": "UUID Checking Single-phase(Get)", "url": "http://192.168.4.1/api/config/parameters?table=1", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 5, "name": "ISP Configuration API", "url": "http://192.168.4.1/api/config/isp", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": {"apn": "airtelgprs.com", "apn2": "airtelgprs.com", "current_sim": "1"}},
-    {"sr": 6, "name": "Get ISP Configuration", "url": "http://192.168.4.1/api/config/isp", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
+    {"sr": 6, "name": "Get ISP Configuration", "url": "http://192.168.4.1/api/config/ISP", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 7, "name": "Remote Server Configuration API", "url": "http://192.168.4.1/api/config/remote-server", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": {"server_url": "rms.iotscada-pmsg.com", "server_port": 8883, "solution_type": "ongridrooftop", "client_id": "d:866738083608743$ongridrooftop$510017", "username": "866738083608743$ongridrooftop$510017", "password": "31c1074a", "server_url1": "rms.iotscada-pmsg.com", "server_port1": 8883, "solution_type1": "ongridrooftop", "client_id1": "d:866082075799828$ongridrooftop$500092", "username1": "866082075799828$ongridrooftop$500092", "password1": "466b856f", "imei": "866738083608743", "imei1": "866082075799828"}},
     {"sr": 8, "name": "Remote Server Configuration Read API", "url": "http://192.168.4.1/api/config/remote-server", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 10, "name": "Secure Broker Connection Trigger & Status API", "url": "http://192.168.4.1/api/device/broker/connect", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": {"action": "connect"}},
@@ -122,18 +120,21 @@ class RMSDeviceTesterApp:
     def __init__(self, root):
         self.root = root
         self.root.title("RMS Device Direct AP Suite")
-        self.root.geometry("1550x850")
+        self.root.geometry("1350x850")
 
         self.execution_results = []
         self.cancel_event = threading.Event()
-        self.session_start_time = None
+        
+        # 1-minute Timer variables
+        self.session_expire_time = None
+        self.timer_running = False
 
         # 1. Header Frame: Controls & Credentials
         setup_frame = ttk.LabelFrame(root, text=" Connection & Login Setup ", padding=8)
         setup_frame.pack(fill="x", padx=10, pady=5)
 
         ttk.Label(setup_frame, text="Username (AP Name):").grid(row=0, column=0, sticky="w", padx=3)
-        self.ap_name_var = tk.StringVar(value="RMS-2074")
+        self.ap_name_var = tk.StringVar(value="RMS-2088")
         ttk.Entry(setup_frame, textvariable=self.ap_name_var, width=12).grid(row=0, column=1, padx=3)
 
         ttk.Label(setup_frame, text="Role:").grid(row=0, column=2, sticky="w", padx=3)
@@ -223,10 +224,41 @@ class RMSDeviceTesterApp:
         self.status_lbl = ttk.Label(bottom_frame, text="Status: Ready", font=("Arial", 9, "bold"))
         self.status_lbl.pack(side="left", padx=5)
 
+        # Live 1-minute countdown label
+        self.timer_lbl = ttk.Label(bottom_frame, text="Token Timer: 60s", font=("Arial", 9, "bold"), foreground="blue")
+        self.timer_lbl.pack(side="right", padx=15)
+
         ttk.Button(bottom_frame, text="Export PDF", command=self.export_pdf).pack(side="right", padx=5)
         ttk.Button(bottom_frame, text="Export Excel", command=self.export_excel).pack(side="right", padx=5)
 
         self.populate_table()
+
+    def start_1min_timer(self):
+        self.session_expire_time = time.time() + 60
+        if not self.timer_running:
+            self.timer_running = True
+            self.update_timer_loop()
+
+    def update_timer_loop(self):
+        if not self.timer_running:
+            return
+
+        if self.session_expire_time:
+            remaining = int(self.session_expire_time - time.time())
+            if remaining > 0:
+                self.timer_lbl.config(text=f"Token Timer: {remaining}s remaining", foreground="blue")
+                self.root.after(1000, self.update_timer_loop)
+            else:
+                self.timer_lbl.config(text="Token Timer: EXPIRED (0s)", foreground="red")
+                self.update_status("Token Expired (1-min limit reached). Testing stopped! Fetch a new token to continue.")
+                
+                # Halt active execution pipeline
+                self.cancel_event.set()
+                self.run_btn.config(state="normal")
+                self.cancel_btn.config(state="disabled")
+                self.timer_running = False
+        else:
+            self.timer_lbl.config(text="Token Timer: Off", foreground="gray")
 
     def on_role_change(self, event=None):
         role = self.role_var.get()
@@ -293,42 +325,38 @@ class RMSDeviceTesterApp:
         self.preview_text.insert(tk.END, preview_str)
         self.preview_text.config(state="normal")
 
-    def auto_refresh_login(self):
-        ap_username = self.ap_name_var.get().strip()
-        password = self.password_var.get().strip()
-        login_url = "http://192.168.4.1/api/login"
-        payload = {"username": ap_username, "password": password}
-        headers = {"Content-Type": "application/json"}
-
-        self.root.after(0, lambda: self.update_request_preview("POST", login_url, headers, payload))
-        try:
-            resp = requests.post(login_url, json=payload, headers=headers, timeout=5)
-            if resp.status_code == 200:
-                token = ""
-                try:
-                    data = resp.json()
-                    token = data.get("sessionToken") or data.get("session") or ""
-                except Exception:
-                    pass
-
-                if not token:
-                    token = resp.cookies.get("session") or "3fa9a12da510c17d"
-
-                self.session_token_var.set(token)
-                self.session_start_time = time.time()
-                return True
-        except Exception:
-            pass
-        return False
-
     def fetch_session_token(self):
         self.update_status("Fetching Session Token (/api/login)...")
         def _thread():
-            if self.auto_refresh_login():
-                token = self.session_token_var.get()
-                self.update_status(f"Login Success! Session Token: {token}")
-            else:
-                self.update_status("Login Failed. Enter/paste session token manually.")
+            ap_username = self.ap_name_var.get().strip()
+            password = self.password_var.get().strip()
+            login_url = "http://192.168.4.1/api/login"
+            payload = {"username": ap_username, "password": password}
+            headers = {"Content-Type": "application/json"}
+
+            self.root.after(0, lambda: self.update_request_preview("POST", login_url, headers, payload))
+            try:
+                resp = requests.post(login_url, json=payload, headers=headers, timeout=5)
+                if resp.status_code == 200:
+                    token = ""
+                    try:
+                        data = resp.json()
+                        token = data.get("sessionToken") or data.get("session") or ""
+                    except Exception:
+                        pass
+
+                    if not token:
+                        token = resp.cookies.get("session") or "3fa9a12da510c17d"
+
+                    self.session_token_var.set(token)
+                    self.update_status(f"Login Success! Session Token: {token}")
+                    
+                    # Start / Reset the 1-minute countdown timer
+                    self.root.after(0, self.start_1min_timer)
+                else:
+                    self.update_status("Login Failed. Check credentials.")
+            except Exception as ex:
+                self.update_status(f"Login Error: {str(ex)}")
 
         threading.Thread(target=_thread, daemon=True).start()
 
@@ -370,6 +398,11 @@ class RMSDeviceTesterApp:
             messagebox.showwarning("Missing Token", "Please fetch or enter a session token first.")
             return
 
+        # Check token expiration
+        if self.session_expire_time and time.time() >= self.session_expire_time:
+            messagebox.showwarning("Token Expired", "1-minute session timer has expired! Please fetch a new token before testing.")
+            return
+
         selected_sr_list = []
         for item_id in self.tree.get_children():
             vals = self.tree.item(item_id, "values")
@@ -379,9 +412,6 @@ class RMSDeviceTesterApp:
         if not selected_sr_list:
             messagebox.showwarning("No Selection", "Please check at least one API tick box to run.")
             return
-
-        if not self.session_start_time:
-            self.session_start_time = time.time()
 
         self.cancel_event.clear()
         self.run_btn.config(state="disabled")
@@ -401,16 +431,12 @@ class RMSDeviceTesterApp:
 
         for idx, api in enumerate(apis_to_run):
             if self.cancel_event.is_set():
-                self.update_status("Execution Cancelled by User.")
                 break
 
-            # Check 1-minute Session Timeout
-            if self.session_start_time and (time.time() - self.session_start_time >= 50):
-                self.update_status("Session 1-min timer expired! Auto-login & refreshing token...")
-                if not self.auto_refresh_login():
-                    self.update_status("Auto renewal failed. Execution paused.")
-                    break
-                self.update_status("Session renewed! Continuing remaining selected APIs...")
+            # Check 1-minute expiration before sending every API request
+            if self.session_expire_time and time.time() >= self.session_expire_time:
+                self.update_status("Token 1-minute timer expired! Execution stopped. Waiting for a new token.")
+                break
 
             token = self.session_token_var.get().strip()
             sr_id = str(api["sr"])
@@ -471,13 +497,13 @@ class RMSDeviceTesterApp:
 
             # Delay before next request
             if idx < len(apis_to_run) - 1:
-                for remaining in range(5, 0, -1):
-                    if self.cancel_event.is_set():
+                for remaining in range(10, 0, -1):
+                    if self.cancel_event.is_set() or (self.session_expire_time and time.time() >= self.session_expire_time):
                         break
-                    self.update_status(f"Waiting 5s delay... ({remaining}s remaining before next API)")
+                    self.update_status(f"Waiting 10s delay... ({remaining}s remaining before next API)")
                     time.sleep(1)
 
-        if not self.cancel_event.is_set():
+        if not self.cancel_event.is_set() and (not self.session_expire_time or time.time() < self.session_expire_time):
             self.update_status("Selected Execution Pipeline Completed!")
 
         self.root.after(0, lambda: self.run_btn.config(state="normal"))
