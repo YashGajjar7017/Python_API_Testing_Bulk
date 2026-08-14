@@ -17,7 +17,7 @@ from reportlab.lib import colors
 
 # Default Role Passwords
 USER_CREDENTIALS = {
-    "Viewer": "Admin@123",
+    "Viewer": "viewer_001",
     "Operator": "operator_001",
     "System Admin": "sysadmin_001",
     "Security Admin": "secadmin_001"
