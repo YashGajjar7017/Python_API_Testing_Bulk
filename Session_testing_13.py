@@ -95,17 +95,17 @@ E+FqGv4I0wdDgg9bxgzppc+ZscC0AkC5y6UCN+/1S8++CcSOSOuGeL25pdnxhg==
 API_ENDPOINTS = [
     {"sr": 1, "name": "Authentication API (Write API Login)", "url": "http://192.168.4.1/api/login", "method": "POST", "roles": {"Viewer": ["Write"], "Operator": ["Write"], "System Admin": ["Write"], "Security Admin": ["Write"]}, "payload": None},
     {"sr": 2, "name": "Authentication API (Read API Login)", "url": "http://192.168.4.1/api/auth/status", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
-    {"sr": 3, "name": "UUID Checking Single-phase", "url": "http://192.168.4.1/api/config/parameters", "method": "POST", "roles": {"System Admin": ["Write"], "Security Admin": ["Write"]}, "payload": {"vdinterval": 5, "table": 1, "parameters": []}},
-    {"sr": 4, "name": "UUID Checking Single-phase(Get)", "url": "http://192.168.4.1/api/config/parameters?table=1", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
+    {"sr": 3, "name": "UUID Checking Single-phase", "url": "http://192.168.4.1/api/config/parameter", "method": "POST", "roles": {"System Admin": ["Write"], "Security Admin": ["Write"]}, "payload": {"vdinterval": 5, "table": 1, "parameters": []}},
+    {"sr": 4, "name": "UUID Checking Single-phase(Get)", "url": "http://192.168.4.1/api/config/parameter?table=1", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 5, "name": "isp Configuration API", "url": "http://192.168.4.1/api/config/isp", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": {"apn": "airtelgprs.com", "apn2": "airtelgprs.com", "current_sim": "1"}},
     {"sr": 6, "name": "Get isp Configuration", "url": "http://192.168.4.1/api/config/isp", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 7, "name": "Remote Server Configuration API", "url": "http://192.168.4.1/api/config/remote-server", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": {"server_url": "rms.iotscada-pmsg.com", "server_port": 8883, "solution_type": "ongridrooftop", "client_id": "d:866738083608743$ongridrooftop$510017", "username": "866738083608743$ongridrooftop$510017", "password": "8dd08acd", "server_url1": "rms.iotscada-pmsg.com", "server_port1": 8883, "solution_type1": "ongridrooftop", "client_id1": "d:866082075799828$ongridrooftop$500092", "username1": "866082075799828$ongridrooftop$500092", "password1": "466b856f", "imei": "866738083623353", "imei1": "866082075799828"}},
     {"sr": 8, "name": "Remote Server Configuration Read API", "url": "http://192.168.4.1/api/config/remote-server", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 10, "name": "Secure Broker Connection Trigger & Status API", "url": "http://192.168.4.1/api/device/broker/connect", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": {"action": "connect"}},
-    {"sr": 11, "name": "Read API – Broker Connection Status", "url": "http://192.168.4.1/api/device/broker/status", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
-    {"sr": 12, "name": "Read API – Get Inverter Communication Configuration", "url": "http://192.168.4.1/api/config/inverter-communication", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
-    {"sr": 13, "name": "Write API – Get Inverter Communication Configuration", "url": "http://192.168.4.1/api/config/inverter-communication", "method": "POST", "roles": {"System Admin": ["Write"], "Security Admin": ["Write"]}, "payload": {"asn": "Yash", "baudrate": 9600, "parity": 1, "stopBit": 1, "databits": 8, "reqCount_1": 2}},
-    {"sr": 15, "name": "Offline Historical Data Download API", "url": "http://192.168.4.1/api/history?day=2026-04-21&vd=5&o", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
+    {"sr": 11, "name": "Read API - Broker Connection Status", "url": "http://192.168.4.1/api/device/broker/status", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
+    {"sr": 12, "name": "Read API - Get Inverter Communication Configuration", "url": "http://192.168.4.1/api/config/inverter-communication", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
+    {"sr": 13, "name": "Write API - Get Inverter Communication Configuration", "url": "http://192.168.4.1/api/config/inverter-communication", "method": "POST", "roles": {"System Admin": ["Write"], "Security Admin": ["Write"]}, "payload": {"asn": "Yash", "baudrate": 9600, "parity": 1, "stopBit": 1, "databits": 8, "reqCount_1": 2}},
+    {"sr": 15, "name": "Offline Historical Data Download API", "url": "http://192.168.4.1/api/history?day=2026-05-29&vd=5&offset=&limit=96", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 16, "name": "WIFI Connection Check", "url": "http://192.168.4.1/api/device/config/update", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 17, "name": "WIFI Connection Check_2", "url": "http://192.168.4.1/api/device/config/update", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": {"ssid": "test_wifi"}},
     {"sr": 18, "name": "Certificate RootCA", "url": "http://192.168.4.1/write.html?filename=rootCA.pem", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": ROOT_CA_PEM},
@@ -113,17 +113,21 @@ API_ENDPOINTS = [
     {"sr": 20, "name": "Certificate Client", "url": "http://192.168.4.1/write.html?filename=client.pem", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": CLIENT_PEM},
     {"sr": 23, "name": "MQTTServer Get", "url": "http://192.168.4.1/api/config/mqtt-server", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 24, "name": "MQTTServer Post", "url": "http://192.168.4.1/api/config/mqtt-server", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": {"http_url": "api.iotscada-pmsg.com", "http_port": 443, "imei": "866738083608743", "username": "866738083608743", "password": "31c1074a"}},
-    {"sr": 25, "name": "Firmware Update", "url": "http://192.168.4.1/update", "method": "POST", "roles": {"Operator": ["Read"], "Security Admin": ["Read", "Write"]}, "payload": {"file": "fw_v1.bin"}},
-    {"sr": 26, "name": "Modbus Poll Access", "url": "http://192.168.4.1/api/modbus", "method": "Get/POST", "roles": {"Operator": ["Read", "Write"], "Security Admin": ["Write"]}, "payload": {"poll": True}},
+    {"sr": 25, "name": "Firmware Update", "url": "http://192.168.4.1/update", "method": "POST", "roles": {"Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read", "Write"]}, "payload": {"file": "fw_v1.bin"}},
+    {"sr": 26, "name": "Modbus Poll Access", "url": "http://192.168.4.1/api/modbus", "method": "Get/POST", "roles": {"Operator": ["Read", "Write"], "System Admin": ["Write"], "Security Admin": ["Write"]}, "payload": {"poll": True}},
     {"sr": 27, "name": "Fiddler Request", "url": "http://192.168.4.1:85/list.html", "method": "Get/POST", "roles": {}, "payload": None},
-    {"sr": 21, "name": "Restart", "url": "http://192.168.4.1/restart", "method": "Get/POST", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "Security Admin": ["Read"]}, "payload": {"action": "reboot"}}
+    {"sr": 21, "name": "Restart", "url": "http://192.168.4.1/restar", "method": "Get/POST", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": {"action": "reboot"}}
 ]
 
 class RMSDeviceTesterApp:
     def __init__(self, root):
         self.root = root
         self.root.title("RMS Device Direct AP Suite")
-        self.root.geometry("1350x850")
+        self.root.geometry("1500x900")
+        try:
+            self.root.state('zoomed')
+        except Exception:
+            pass
 
         # Persistent HTTP Session object
         self.http_session = requests.Session()
@@ -165,16 +169,20 @@ class RMSDeviceTesterApp:
         self.cancel_btn = ttk.Button(setup_frame, text="Cancel", command=self.cancel_process, state="disabled")
         self.cancel_btn.grid(row=0, column=10, padx=3)
 
+        # Main Vertical PanedWindow to make Request Preview adjustable up/down
+        main_v_paned = ttk.PanedWindow(root, orient="vertical")
+        main_v_paned.pack(fill="both", expand=True, padx=10, pady=5)
+
         # Preview Frame
-        preview_frame = ttk.LabelFrame(root, text=" Request Preview ", padding=5)
-        preview_frame.pack(fill="x", padx=10, pady=5)
+        preview_frame = ttk.LabelFrame(main_v_paned, text=" Request Preview ", padding=5)
+        main_v_paned.add(preview_frame, weight=1)
 
         self.preview_text = scrolledtext.ScrolledText(preview_frame, height=6, font=("Consolas", 9), wrap="word")
         self.preview_text.pack(fill="both", expand=True)
 
         # Main Table & Response Area
-        paned = ttk.PanedWindow(root, orient="horizontal")
-        paned.pack(fill="both", expand=True, padx=10, pady=5)
+        paned = ttk.PanedWindow(main_v_paned, orient="horizontal")
+        main_v_paned.add(paned, weight=4)
 
         left_frame = ttk.Frame(paned)
         paned.add(left_frame, weight=3)
@@ -185,15 +193,15 @@ class RMSDeviceTesterApp:
         for col in cols:
             self.tree.heading(col, text=col.capitalize().replace("_", " "))
         
-        self.tree.column("select", width=40, anchor="center")
-        self.tree.column("sr", width=30, anchor="center")
-        self.tree.column("name", width=180)
-        self.tree.column("method", width=60, anchor="center")
-        self.tree.column("url", width=200)
-        self.tree.column("read_acc", width=75, anchor="center")
-        self.tree.column("write_acc", width=75, anchor="center")
-        self.tree.column("read_status", width=120, anchor="center")
-        self.tree.column("write_status", width=120, anchor="center")
+        self.tree.column("select", width=50, anchor="center", minwidth=40, stretch=False)
+        self.tree.column("sr", width=40, anchor="center", minwidth=30, stretch=False)
+        self.tree.column("name", width=200, minwidth=150, stretch=True)
+        self.tree.column("method", width=70, anchor="center", minwidth=50, stretch=False)
+        self.tree.column("url", width=250, minwidth=200, stretch=True)
+        self.tree.column("read_acc", width=80, anchor="center", minwidth=70, stretch=False)
+        self.tree.column("write_acc", width=80, anchor="center", minwidth=70, stretch=False)
+        self.tree.column("read_status", width=130, anchor="center", minwidth=100, stretch=True)
+        self.tree.column("write_status", width=130, anchor="center", minwidth=100, stretch=True)
 
         tree_scroll = ttk.Scrollbar(left_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscroll=tree_scroll.set)
@@ -220,6 +228,8 @@ class RMSDeviceTesterApp:
 
         ttk.Button(bottom_frame, text="Export PDF", command=self.export_pdf).pack(side="right", padx=5)
         ttk.Button(bottom_frame, text="Export Excel", command=self.export_excel).pack(side="right", padx=5)
+        ttk.Button(bottom_frame, text="Export JSON", command=self.export_json).pack(side="right", padx=5)
+        ttk.Button(bottom_frame, text="Export CSV", command=self.export_csv).pack(side="right", padx=5)
 
         self.populate_table()
 
@@ -277,6 +287,15 @@ class RMSDeviceTesterApp:
         api = next((a for a in API_ENDPOINTS if str(a["sr"]) == str(sr_val)), None)
         if api:
             self.update_request_preview(api)
+            # Display response output if testing has been done for this API
+            res = next((r for r in self.execution_results if str(r["sr"]) == str(sr_val)), None)
+            if res:
+                self.display_output(res)
+            else:
+                self.output_text.config(state="normal")
+                self.output_text.delete("1.0", tk.END)
+                self.output_text.insert(tk.END, "No execution result yet. Run the APIs to see output.")
+                self.output_text.config(state="disabled")
 
     def start_1min_timer(self):
         self.session_expire_time = time.time() + 60
@@ -304,25 +323,7 @@ class RMSDeviceTesterApp:
                     self.cancel_btn.config(state="disabled")
                     self.timer_running = False
 
-    def verify_write_read_match(self, payload, read_response_text):
-        if not payload:
-            return True, "No payload to compare"
-        try:
-            resp_data = json.loads(read_response_text)
-            if isinstance(payload, dict) and isinstance(resp_data, dict):
-                for k, v in payload.items():
-                    if isinstance(v, (list, dict)):
-                        continue
-                    if str(v).lower() not in str(resp_data).lower():
-                        return False, f"Mismatch: '{v}' missing"
-                return True, "Match"
-        except Exception:
-            if isinstance(payload, dict):
-                for k, v in payload.items():
-                    if isinstance(v, (str, int, float)) and str(v).lower() not in read_response_text.lower():
-                        return False, f"Mismatch: '{v}' missing"
-                return True, "Match"
-        return True, "Verified"
+
 
     def on_role_change(self, event=None):
         role = self.role_var.get()
@@ -370,7 +371,7 @@ class RMSDeviceTesterApp:
                             token = "active_token"
 
                     self.session_token_var.set(token)
-                    self.http_session.cookies.set("session", token)
+                    self.http_session.cookies.clear()
                     self.http_session.headers.update({
                         "Authorization": f"Bearer {token}",
                         "Cookie": f"session={token}"
@@ -405,6 +406,7 @@ class RMSDeviceTesterApp:
         self.pipeline_running = True
 
         WRITE_TO_READ_MAPPING = {3: 4, 5: 6, 7: 8, 10: 11, 13: 12, 17: 16, 24: 23, 26: 26}
+        READ_TO_WRITE_MAPPING = {4: 3, 6: 5, 8: 7, 11: 10, 12: 13, 16: 17, 23: 24, 26: 26}
         selected_role = self.role_var.get()
 
         for idx, api in enumerate(API_ENDPOINTS):
@@ -422,8 +424,19 @@ class RMSDeviceTesterApp:
                 orig_read_acc = "YES" if "Read" in permissions else "-"
                 orig_write_acc = "YES" if "Write" in permissions else "-"
 
-            # Generate dynamic random payload for testing
-            active_payload = self.generate_randomized_payload(api)
+            # Determine if Restart is allowed for this role
+            is_restart = (api["sr"] == 21)
+            has_perm_restart = is_restart and (len(permissions) > 0)
+
+            # Retrieve payload statically (remove dynamic payload changes sent to device)
+            if api["sr"] == 1:
+                # Use current GUI credentials for authenticating inside the pipeline to avoid token invalidation
+                active_payload = {
+                    "username": self.ap_name_var.get().strip(),
+                    "password": self.password_var.get().strip()
+                }
+            else:
+                active_payload = api.get("payload")
             self.root.after(0, lambda a=api, p=active_payload: self.update_request_preview(a, p))
 
             body_output = ""
@@ -431,7 +444,8 @@ class RMSDeviceTesterApp:
             read_status = "-"
 
             # STEP 1: Execute Write (POST API)
-            if "POST" in api["method"].upper() or "GET/POST" in api["method"].upper():
+            # Only send the request if the role has Write permissions (shows YES in table)
+            if (orig_write_acc == "YES" or has_perm_restart) and ("POST" in api["method"].upper() or "GET/POST" in api["method"].upper()):
                 try:
                     if isinstance(active_payload, dict):
                         r = self.http_session.post(api["url"], json=active_payload, timeout=5)
@@ -440,34 +454,57 @@ class RMSDeviceTesterApp:
                     else:
                         r = self.http_session.post(api["url"], timeout=5)
 
-                    write_status = f"{r.status_code} {r.reason}"
+                    if r.status_code == 401:
+                        write_status = "401 Auth Failure"
+                    else:
+                        write_status = f"{r.status_code} {r.reason}"
+                        if r.status_code == 200 and api["sr"] == 1:
+                            new_token = r.cookies.get("session") or ""
+                            if not new_token:
+                                try:
+                                    new_token = r.json().get("sessionToken") or r.json().get("session") or "active_token"
+                                except Exception:
+                                    new_token = "active_token"
+                            self.session_token_var.set(new_token)
+                            self.http_session.cookies.clear()
+                            self.http_session.headers.update({
+                                "Authorization": f"Bearer {new_token}",
+                                "Cookie": f"session={new_token}"
+                            })
+                            self.root.after(0, self.start_1min_timer)
                     body_output += f"--- STEP 1: POST WRITE RESPONSE ---\nStatus: {write_status}\n{r.text}\n"
                 except Exception as ex:
                     write_status = "Error/Offline"
                     body_output += f"--- STEP 1: POST ERROR ---\n{str(ex)}\n"
+            else:
+                write_status = "-----"
 
             # STEP 2: Strict Delay (1ms pause between Write and Read)
             time.sleep(0.001)
 
             # STEP 3: Execute Read (GET API) and Verify Payload Match
-            read_sr = WRITE_TO_READ_MAPPING.get(api["sr"], api["sr"])
-            read_api = next((a for a in API_ENDPOINTS if a["sr"] == read_sr), api)
+            # Only send the request if the role has Read permissions (shows YES in table)
+            if (orig_read_acc == "YES" or has_perm_restart):
+                read_sr = WRITE_TO_READ_MAPPING.get(api["sr"], api["sr"])
+                read_api = next((a for a in API_ENDPOINTS if a["sr"] == read_sr), api)
 
-            try:
-                r_read = self.http_session.get(read_api["url"], timeout=5)
-                if r_read.status_code == 200:
-                    is_match, msg = self.verify_write_read_match(active_payload, r_read.text)
-                    if is_match:
-                        read_status = "200 OK (Match)"
-                        if write_status.startswith("401") or write_status.startswith("404"):
-                            write_status = "200 OK (Verified via Read)"
+                try:
+                    r_read = self.http_session.get(read_api["url"], timeout=5)
+                    if r_read.status_code == 200:
+                        read_status = "200 OK"
+                        if not write_status.startswith("401") and write_status.startswith("404"):
+                            write_status = "200 OK"
                     else:
-                        read_status = f"200 OK ({msg})"
-                else:
-                    read_status = f"{r_read.status_code} {r_read.reason}"
-                body_output += f"\n--- STEP 2: READ VERIFICATION ---\nStatus: {read_status}\n{r_read.text}"
-            except Exception as ex:
-                read_status = "Error/Offline"
+                        if r_read.status_code == 401:
+                            read_status = "401 Auth Failure"
+                        else:
+                            read_status = f"{r_read.status_code} {r_read.reason}"
+                    body_output += f"\n--- STEP 2: READ VERIFICATION ---\nStatus: {read_status}\n{r_read.text}"
+                except Exception as ex:
+                    read_status = "Error/Offline"
+                    body_output += f"\n--- STEP 2: READ ERROR ---\n{str(ex)}"
+            else:
+                read_status = "-----"
 
             # STEP 4: Print/Update Statuses in UI
             self.root.after(0, lambda s=sr_id, ra=orig_read_acc, wa=orig_write_acc, rs=read_status, ws=write_status: 
@@ -488,6 +525,7 @@ class RMSDeviceTesterApp:
         self.output_text.config(state="normal")
         self.output_text.delete("1.0", tk.END)
         self.output_text.insert(tk.END, f"API: {res['name']}\nRead Status: {res['read_status']} | Write Status: {res['write_status']}\n\n{res['body']}")
+        self.output_text.config(state="disabled")
 
     def update_status(self, text):
         self.root.after(0, lambda: self.status_lbl.config(text=f"Status: {text}"))
@@ -517,6 +555,32 @@ class RMSDeviceTesterApp:
         story.append(t)
         doc.build(story)
         messagebox.showinfo("Export Successful", "Report exported to API_Report.pdf")
+
+    def export_csv(self):
+        if not self.execution_results:
+            messagebox.showwarning("No Data", "No execution results to export.")
+            return
+        import csv
+        try:
+            with open("API_Report.csv", mode="w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(["Sr.", "API Name", "Read Status", "Write Status", "Output"])
+                for item in self.execution_results:
+                    writer.writerow([item["sr"], item["name"], item["read_status"], item["write_status"], item["body"]])
+            messagebox.showinfo("Export Successful", "Report exported to API_Report.csv")
+        except Exception as ex:
+            messagebox.showerror("Export Error", f"Failed to export CSV: {str(ex)}")
+
+    def export_json(self):
+        if not self.execution_results:
+            messagebox.showwarning("No Data", "No execution results to export.")
+            return
+        try:
+            with open("API_Report.json", mode="w", encoding="utf-8") as f:
+                json.dump(self.execution_results, f, indent=4)
+            messagebox.showinfo("Export Successful", "Report exported to API_Report.json")
+        except Exception as ex:
+            messagebox.showerror("Export Error", f"Failed to export JSON: {str(ex)}")
 
 if __name__ == "__main__":
     root = tk.Tk()

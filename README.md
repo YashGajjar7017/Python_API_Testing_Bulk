@@ -1,6 +1,6 @@
-# RMS Device Direct Access Point (AP) testing Suite Pro (v10)
+# RMS Device Direct Access Point (AP) Testing Suite Pro (v13)
 
-This is a comprehensive, production-grade diagnostic application written in Python using a modernized `Tkinter` dark theme GUI (`Catppuccin Mocha` themed). It facilitates sequential, step-by-step verification and configuration of RMS IoT Gateway units over their local direct Wi-Fi Access Point link (default gateway IP `192.168.4.1`).
+This is a comprehensive, production-grade diagnostic application written in Python using a modernized `Tkinter` dark theme GUI. It facilitates sequential, step-by-step verification and configuration of RMS IoT Gateway units over their local direct Wi-Fi Access Point link (default gateway IP `192.168.4.1`).
 
 ---
 
@@ -37,7 +37,7 @@ This is a comprehensive, production-grade diagnostic application written in Pyth
    - **📡 Ping Diagnostics Tab**: Loops background ping command prompts to `192.168.4.1`, measuring response times and compiling packet health diagnostics.
 
 5. **Multi-Format Export & Reports**
-   - Instantly compiles execution telemetry into formatted **PDF summary sheets** (via ReportLab) and detailed **Excel spreadsheets** (via OpenPyXL) showing response bodies, HTTP status codes, and access permissions.
+   - Instantly compiles execution telemetry into formatted **PDF summary sheets** (via ReportLab), detailed **Excel spreadsheets** (via OpenPyXL), standard **CSV reports**, and structured **JSON arrays** showing response bodies, HTTP status codes, and access permissions.
 
 ---
 
@@ -52,21 +52,21 @@ pip install -r requirements.txt
 ### Run the Application
 
 ```bash
-python Session_testing_10.py
+python Session_testing_13.py
 ```
 
 ---
 
 ## 🔒 Role Permission Matrix Reference
 
-The application simulates 4 levels of system privileges configured on the gateway:
+The application simulates 4 levels of system privileges configured on the gateway, matching the device's authorization model:
 
 | Role Name | Access Privilege Level / Permissions | Default Password |
 | :--- | :--- | :--- |
-| **Viewer** | Read-Only data visualization endpoints. Cannot modify parameters. | `viewer_001` |
-| **Operator** | Read & limited write (e.g. Modbus scheduler access). | `operator_001` |
-| **System Admin** | Core hardware configurations (UUID checks, inverter link speeds). | `sysadmin_001` |
-| **Security Admin** | Ultimate write operations (Certificate uploads, server endpoints, APN). | `secadmin_001` |
+| **Viewer** | Read-Only data visualization endpoints. Cannot modify parameters or trigger changes. | `viewer_001` |
+| **Operator** | Read-only configuration access + full write operations on Modbus Poll settings. | `operator_001` |
+| **System Admin** | Read-only firmware/restart capabilities + write capabilities on UUID limits, Inverter links, and Modbus. | `sysadmin_001` |
+| **Security Admin** | Root access. Full read/write privileges on all endpoints including Certificates, ISP, Servers, and Firmware. | `secadmin_001` |
 
 ---
 
