@@ -8,14 +8,15 @@ import threading
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext
 import requests
+import html
 
 # Excel export library
 import openpyxl
 
 # PDF export library
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, KeepTogether
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
 # Default Role Passwords (Updated to default to Admin@123)
@@ -107,7 +108,7 @@ API_ENDPOINTS = [
     {"sr": 11, "name": "Read API - Broker Connection Status", "url": "http://192.168.4.1/api/device/broker/status", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 12, "name": "Read API - Get Inverter Communication Configuration", "url": "http://192.168.4.1/api/config/inverter-communication", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 13, "name": "Write API - Get Inverter Communication Configuration", "url": "http://192.168.4.1/api/config/inverter-communication", "method": "POST", "roles": {"System Admin": ["Write"], "Security Admin": ["Write"]}, "payload": {"asn": "Yash", "baudrate": 9600, "parity": 1, "stopBit": 1, "databits": 8, "reqCount_1": 2}},
-    {"sr": 15, "name": "Offline Historical Data Download API", "url": "http://192.168.4.1/api/history?day=2026-05-29&vd=5&offset=&limit=96", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
+    {"sr": 15, "name": "Offline Historical Data Download API", "url": "http://192.168.4.1/api/history?day=2026-08-21&vd=5&offset=10&limit=96", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 16, "name": "WIFI Connection Check", "url": "http://192.168.4.1/api/device/config/update", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 17, "name": "WIFI Connection Check_2", "url": "http://192.168.4.1/api/device/config/update", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": {"ssid": "test_wifi"}},
     {"sr": 18, "name": "Certificate RootCA", "url": "http://192.168.4.1/write.html?filename=rootCA.pem", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": ROOT_CA_PEM},
@@ -115,11 +116,11 @@ API_ENDPOINTS = [
     {"sr": 20, "name": "Certificate Client", "url": "http://192.168.4.1/write.html?filename=client.pem", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": CLIENT_PEM},
     {"sr": 23, "name": "MQTTServer Get", "url": "http://192.168.4.1/api/config/mqtt-server", "method": "GET", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": None},
     {"sr": 24, "name": "MQTTServer Post", "url": "http://192.168.4.1/api/config/mqtt-server", "method": "POST", "roles": {"Security Admin": ["Write"]}, "payload": {"http_url": "api.iotscada-pmsg.com", "http_port": 443, "imei": "866738083608743", "username": "866738083608743", "password": "31c1074a"}},
-    {"sr": 25, "name": "Firmware Update", "url": "http://192.168.4.1/update", "method": "POST", "roles": {"Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read", "Write"]}, "payload": {"file": "fw_v1.bin"}},
+    {"sr": 25, "name": "Firmware Update", "url": "http://192.168.4.1/update1", "method": "POST", "roles": {"Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read", "Write"]}, "payload": {"file": "fw_v1.bin"}},
     {"sr": 26, "name": "Modbus Poll Access", "url": "http://192.168.4.1/api/modbus", "method": "Get/POST", "roles": {"Operator": ["Read", "Write"], "System Admin": ["Write"], "Security Admin": ["Write"]}, "payload": {"poll": True}},
     {"sr": 27, "name": "Fiddler Request", "url": "http://192.168.4.1:85/list.html", "method": "Get/POST", "roles": {}, "payload": None},
     {"sr": 28, "name": "Device Config Update API", "url": "http://192.168.4.1/api/device/config/update", "method": "POST", "roles": {"Viewer": ["Write"], "Operator": ["Write"], "System Admin": ["Write"], "Security Admin": ["Write"]}, "payload": {"type": 2, "device_username": "SystemAdmin", "device_password": "Admin@123"}},
-    {"sr": 21, "name": "Restart", "url": "http://192.168.4.1/restar", "method": "Get/POST", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": {"action": "reboot"}}
+    {"sr": 21, "name": "Restart", "url": "http://192.168.4.1/restart1", "method": "Get/POST", "roles": {"Viewer": ["Read"], "Operator": ["Read"], "System Admin": ["Read"], "Security Admin": ["Read"]}, "payload": {"action": "reboot"}}
 ]
 
 class RMSDeviceTesterApp:
@@ -241,6 +242,7 @@ class RMSDeviceTesterApp:
         self.timer_lbl = ttk.Label(bottom_frame, text="Token Timer: 60s", font=("Segoe UI", 9, "bold"), foreground=self.COLOR_BLUE)
         self.timer_lbl.pack(side="right", padx=15)
 
+        ttk.Button(bottom_frame, text="Add More URL", command=self.popup_add_api_dialog).pack(side="right", padx=5)
         ttk.Button(bottom_frame, text="Export PDF", command=self.export_pdf).pack(side="right", padx=5)
         ttk.Button(bottom_frame, text="Export Excel", command=self.export_excel).pack(side="right", padx=5)
         ttk.Button(bottom_frame, text="Export JSON", command=self.export_json).pack(side="right", padx=5)
@@ -464,6 +466,157 @@ class RMSDeviceTesterApp:
         ttk.Button(btn_frame, text="Cancel", command=dialog.destroy).pack(side="right", padx=5)
         ttk.Button(btn_frame, text="Save Changes", command=save_and_close, style="Accent.TButton").pack(side="right", padx=5)
 
+    def popup_add_api_dialog(self):
+        """Displays a modal Toplevel window to add a new API Endpoint"""
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Add New API Endpoint")
+        dialog.geometry("620x560")
+        dialog.transient(self.root)
+        dialog.grab_set()
+        dialog.configure(bg=self.BG_MAIN)
+
+        # Center Dialog Popup relative to main app window
+        dialog.update_idletasks()
+        width = dialog.winfo_width()
+        height = dialog.winfo_height()
+        x = self.root.winfo_x() + (self.root.winfo_width() // 2) - (width // 2)
+        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - (height // 2)
+        dialog.geometry(f"{width}x{height}+{x}+{y}")
+
+        main_frame = ttk.Frame(dialog, padding=15)
+        main_frame.pack(fill="both", expand=True)
+
+        ttk.Label(main_frame, text="Add New API Endpoint Configuration", font=("Segoe UI", 11, "bold"), foreground=self.COLOR_ACCENT).pack(anchor="w", pady=(0, 15))
+
+        # API Name
+        ttk.Label(main_frame, text="API Name:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(5, 2))
+        name_var = tk.StringVar()
+        name_entry = ttk.Entry(main_frame, textvariable=name_var, font=("Segoe UI", 9))
+        name_entry.pack(fill="x", pady=(0, 10))
+        name_entry.focus_set()
+
+        # Endpoint URL
+        ttk.Label(main_frame, text="URL:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(5, 2))
+        url_var = tk.StringVar(value="http://192.168.4.1/api/")
+        url_entry = ttk.Entry(main_frame, textvariable=url_var, font=("Segoe UI", 9))
+        url_entry.pack(fill="x", pady=(0, 10))
+
+        # Method
+        ttk.Label(main_frame, text="Method:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(5, 2))
+        method_var = tk.StringVar(value="GET")
+        method_cb = ttk.Combobox(main_frame, textvariable=method_var, values=["GET", "POST", "Get/POST"], state="readonly", font=("Segoe UI", 9))
+        method_cb.pack(fill="x", pady=(0, 10))
+
+        # Permissions per role
+        ttk.Label(main_frame, text="Role Permissions (Select Read/Write per role):", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(5, 2))
+        
+        perm_frame = ttk.LabelFrame(main_frame, text=" Permissions Matrix ", padding=10)
+        perm_frame.pack(fill="x", pady=(0, 10))
+
+        # Columns headers
+        ttk.Label(perm_frame, text="Role", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", padx=10, pady=2)
+        ttk.Label(perm_frame, text="Read", font=("Segoe UI", 9, "bold")).grid(row=0, column=1, anchor="center", padx=20, pady=2)
+        ttk.Label(perm_frame, text="Write", font=("Segoe UI", 9, "bold")).grid(row=0, column=2, anchor="center", padx=20, pady=2)
+
+        roles_list = ["Viewer", "Operator", "System Admin", "Security Admin"]
+        perm_vars = {} # maps role name to (read_var, write_var)
+
+        for i, role in enumerate(roles_list):
+            ttk.Label(perm_frame, text=role).grid(row=i+1, column=0, sticky="w", padx=10, pady=2)
+            
+            read_var = tk.BooleanVar(value=True)
+            write_var = tk.BooleanVar(value=False)
+            
+            # Default helper permissions
+            if role == "Security Admin":
+                write_var.set(True)
+            elif role == "System Admin":
+                write_var.set(True)
+                
+            read_chk = ttk.Checkbutton(perm_frame, variable=read_var)
+            read_chk.grid(row=i+1, column=1, padx=20, pady=2)
+            
+            write_chk = ttk.Checkbutton(perm_frame, variable=write_var)
+            write_chk.grid(row=i+1, column=2, padx=20, pady=2)
+            
+            perm_vars[role] = (read_var, write_var)
+
+        # Payload ScrolledText field
+        ttk.Label(main_frame, text="Payload (JSON Format / raw certificate PEM, Optional):", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(5, 2))
+        payload_text = scrolledtext.ScrolledText(
+            main_frame, height=6, font=("Consolas", 9), wrap="none",
+            bg=self.BG_CARD, fg=self.FG_TEXT, insertbackground=self.FG_TEXT,
+            highlightthickness=1, highlightbackground=self.BG_BORDER, relief="flat"
+        )
+        payload_text.pack(fill="both", expand=True, pady=(0, 15))
+
+        # Bottom buttons
+        btn_frame = ttk.Frame(main_frame)
+        btn_frame.pack(fill="x", side="bottom")
+
+        def add_and_close():
+            name = name_var.get().strip()
+            url = url_var.get().strip()
+            method = method_var.get().strip()
+            payload_str = payload_text.get("1.0", tk.END).strip()
+
+            if not name:
+                messagebox.showerror("Validation Error", "API Name field cannot be empty.", parent=dialog)
+                return
+            if not url:
+                messagebox.showerror("Validation Error", "URL field cannot be empty.", parent=dialog)
+                return
+
+            if not payload_str:
+                payload = None
+            elif payload_str.startswith("-----BEGIN"):
+                payload = payload_str
+            else:
+                try:
+                    payload = json.loads(payload_str)
+                except Exception:
+                    payload = payload_str
+
+            # Construct roles dict
+            roles_dict = {}
+            for role, (r_var, w_var) in perm_vars.items():
+                perms = []
+                if r_var.get():
+                    perms.append("Read")
+                if w_var.get():
+                    perms.append("Write")
+                if perms:
+                    roles_dict[role] = perms
+
+            # Compute next serial number
+            next_sr = max(api["sr"] for api in API_ENDPOINTS) + 1 if API_ENDPOINTS else 1
+
+            new_api = {
+                "sr": next_sr,
+                "name": name,
+                "url": url,
+                "method": method,
+                "roles": roles_dict,
+                "payload": payload
+            }
+
+            API_ENDPOINTS.append(new_api)
+
+            # Sync GUI Table
+            self.populate_table()
+            
+            # Select the newly added row
+            if self.tree.exists(str(next_sr)):
+                self.tree.selection_set(str(next_sr))
+                self.tree.see(str(next_sr))
+
+            self.update_status(f"Added new API Endpoint: '{name}'")
+            dialog.destroy()
+            messagebox.showinfo("Success", f"Successfully added API Endpoint #{next_sr}: '{name}'")
+
+        ttk.Button(btn_frame, text="Cancel", command=dialog.destroy).pack(side="right", padx=5)
+        ttk.Button(btn_frame, text="Add URL/API", command=add_and_close, style="Accent.TButton").pack(side="right", padx=5)
+
     def start_1min_timer(self):
         self.session_expire_time = time.time() + 60
         if not self.timer_running:
@@ -514,6 +667,129 @@ class RMSDeviceTesterApp:
                 "☐", api["sr"], api["name"], api["method"], api["url"], read_access, write_access, "Pending", "Pending"
             ))
 
+    def append_to_output(self, text):
+        self.output_text.config(state="normal")
+        self.output_text.insert(tk.END, text)
+        self.output_text.config(state="disabled")
+        self.output_text.see(tk.END)
+
+    def run_3_step_auth_logic(self, log_func=None):
+        """
+        Executes the 3-step authentication logic.
+        log_func: a function that takes a string and writes it to logs.
+        Returns the final token if successful, raises an Exception otherwise.
+        """
+        def log(msg):
+            if log_func:
+                log_func(msg)
+
+        ap_username = self.ap_name_var.get().strip()
+        password = self.password_var.get().strip()
+
+        login_api = next((a for a in API_ENDPOINTS if a["sr"] == 1), None)
+        login_url = login_api["url"] if login_api else "http://192.168.4.1/api/login"
+
+        config_api = next((a for a in API_ENDPOINTS if a["sr"] == 28), None)
+        config_url = config_api["url"] if config_api else "http://192.168.4.1/api/device/config/update"
+
+        # Create/Prepare session headers
+        self.http_session.headers.update({"Content-Type": "application/json"})
+
+        # ==================== STEP 1 ====================
+        log(f"\n[Step 1] POST to {login_url}")
+        payload1 = {"username": ap_username, "password": password}
+        log(f"Payload: {json.dumps(payload1, indent=2)}")
+
+        resp = self.http_session.post(login_url, json=payload1, timeout=5)
+        log(f"Response ({resp.status_code}): {resp.text}")
+
+        if resp.status_code != 200:
+            raise Exception(f"Step 1 AP Login failed with status code {resp.status_code}")
+
+        token1 = ""
+        try:
+            data = resp.json()
+            if isinstance(data, dict):
+                token1 = data.get("Data", {}).get("token") or data.get("sessionToken") or data.get("session") or ""
+        except Exception:
+            pass
+        if not token1:
+            token1 = resp.cookies.get("session") or ""
+
+        if not token1:
+            raise Exception("Failed to extract session token from Step 1 response.")
+
+        # ==================== STEP 2 ====================
+        role_map = {
+            "Viewer": "Viewer",
+            "Operator": "Operator",
+            "System Admin": "SystemAdmin",
+            "Security Admin": "SecurityAdmin"
+        }
+        selected_role = self.role_var.get()
+        dev_username = role_map.get(selected_role, "SecurityAdmin")
+
+        if config_api and isinstance(config_api.get("payload"), dict):
+            payload2 = copy.deepcopy(config_api["payload"])
+            payload2["device_username"] = dev_username
+            payload2["device_password"] = password
+        else:
+            payload2 = {
+                "type": 2,
+                "device_username": dev_username,
+                "device_password": password
+            }
+
+        headers2 = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token1}",
+            "Cookie": f"session={token1}"
+        }
+
+        log(f"\n[Step 2] POST to {config_url}")
+        log(f"Headers: {json.dumps(headers2, indent=2)}")
+        log(f"Payload: {json.dumps(payload2, indent=2)}")
+
+        resp2 = self.http_session.post(config_url, json=payload2, headers=headers2, timeout=5)
+        log(f"Response ({resp2.status_code}): {resp2.text}")
+
+        if resp2.status_code != 200:
+            raise Exception(f"Step 2 config update failed with status code {resp2.status_code}")
+
+        # ==================== STEP 3 ====================
+        log(f"\n[Step 3] POST to {login_url}")
+        payload3 = {"username": dev_username, "password": password}
+        log(f"Payload: {json.dumps(payload3, indent=2)}")
+
+        resp3 = self.http_session.post(login_url, json=payload3, timeout=5)
+        log(f"Response ({resp3.status_code}): {resp3.text}")
+
+        if resp3.status_code != 200:
+            raise Exception(f"Step 3 authentication as {dev_username} failed with status code {resp3.status_code}")
+
+        token3 = ""
+        try:
+            data3 = resp3.json()
+            if isinstance(data3, dict):
+                token3 = data3.get("Data", {}).get("token") or data3.get("sessionToken") or data3.get("session") or ""
+        except Exception:
+            pass
+        if not token3:
+            token3 = resp3.cookies.get("session") or ""
+
+        if not token3:
+            raise Exception("Failed to extract final session token in Step 3.")
+
+        # Update the final headers and cookies
+        self.session_token_var.set(token3)
+        self.http_session.cookies.clear()
+        self.http_session.headers.update({
+            "Authorization": f"Bearer {token3}",
+            "Cookie": f"session={token3}"
+        })
+
+        return token3
+
     def fetch_session_token(self):
         """Implements the new 3-Step Session Login & Credential Pushing workflow"""
         self.update_status("Initiating 3-Step Login sequence...")
@@ -525,145 +801,14 @@ class RMSDeviceTesterApp:
         self.output_text.config(state="disabled")
 
         def _thread():
-            ap_username = self.ap_name_var.get().strip()
-            password = self.password_var.get().strip()
-            
-            # Fetch dynamic login & update URLs from API_ENDPOINTS in case the user edited them
-            login_api = next((a for a in API_ENDPOINTS if a["sr"] == 1), None)
-            login_url = login_api["url"] if login_api else "http://192.168.4.1/api/login"
-            
-            config_api = next((a for a in API_ENDPOINTS if a["sr"] == 28), None)
-            config_url = config_api["url"] if config_api else "http://192.168.4.1/api/device/config/update"
-
-            self.http_session = requests.Session()
-            self.http_session.headers.update({"Content-Type": "application/json"})
+            def log_to_gui(msg):
+                self.root.after(0, lambda: self.append_to_output(msg + "\n"))
 
             try:
-                # ==================== STEP 1 ====================
-                self.update_status("Step 1/3: Authenticating AP Login...")
-                payload1 = {"username": ap_username, "password": password}
-                
-                self.output_text.config(state="normal")
-                self.output_text.insert(tk.END, f"\n[Step 1] POST to {login_url}\nPayload: {json.dumps(payload1, indent=2)}\n")
-                self.output_text.config(state="disabled")
-
-                resp = self.http_session.post(login_url, json=payload1, timeout=5)
-                
-                self.output_text.config(state="normal")
-                self.output_text.insert(tk.END, f"Response ({resp.status_code}): {resp.text}\n")
-                self.output_text.config(state="disabled")
-
-                if resp.status_code != 200:
-                    self.update_status(f"Step 1 Failed ({resp.status_code})")
-                    self.root.after(0, lambda: messagebox.showerror("Login Fail", f"Step 1 AP Login failed with status code {resp.status_code}"))
-                    return
-
-                # Parse token from response payload (support nested Data -> token structure)
-                token1 = ""
-                try:
-                    data = resp.json()
-                    if isinstance(data, dict):
-                        token1 = data.get("Data", {}).get("token") or data.get("sessionToken") or data.get("session") or ""
-                except Exception:
-                    pass
-                if not token1:
-                    token1 = resp.cookies.get("session") or ""
-
-                if not token1:
-                    self.update_status("Step 1 Failed: Token not found.")
-                    self.root.after(0, lambda: messagebox.showerror("Login Fail", "Failed to extract session token from Step 1 response."))
-                    return
-
-                # ==================== STEP 2 ====================
-                self.update_status("Step 2/3: Applying user role configurations...")
-                role_map = {
-                    "Viewer": "Viewer",
-                    "Operator": "Operator",
-                    "System Admin": "SystemAdmin",
-                    "Security Admin": "SecurityAdmin"
-                }
-                selected_role = self.role_var.get()
-                dev_username = role_map.get(selected_role, "SecurityAdmin")
-
-                if config_api and isinstance(config_api.get("payload"), dict):
-                    payload2 = copy.deepcopy(config_api["payload"])
-                    payload2["device_username"] = dev_username
-                    payload2["device_password"] = password
-                else:
-                    payload2 = {
-                        "type": 2,
-                        "device_username": dev_username,
-                        "device_password": password
-                    }
-
-                headers2 = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {token1}",
-                    "Cookie": f"session={token1}"
-                }
-
-                self.output_text.config(state="normal")
-                self.output_text.insert(tk.END, f"\n[Step 2] POST to {config_url}\nHeaders: {json.dumps(headers2, indent=2)}\nPayload: {json.dumps(payload2, indent=2)}\n")
-                self.output_text.config(state="disabled")
-
-                resp2 = self.http_session.post(config_url, json=payload2, headers=headers2, timeout=5)
-
-                self.output_text.config(state="normal")
-                self.output_text.insert(tk.END, f"Response ({resp2.status_code}): {resp2.text}\n")
-                self.output_text.config(state="disabled")
-
-                if resp2.status_code != 200:
-                    self.update_status(f"Step 2 Failed ({resp2.status_code})")
-                    self.root.after(0, lambda: messagebox.showerror("Login Fail", f"Step 2 config update failed with status code {resp2.status_code}"))
-                    return
-
-                # ==================== STEP 3 ====================
-                self.update_status(f"Step 3/3: Re-authenticating as '{dev_username}'...")
-                payload3 = {"username": dev_username, "password": password}
-
-                self.output_text.config(state="normal")
-                self.output_text.insert(tk.END, f"\n[Step 3] POST to {login_url}\nPayload: {json.dumps(payload3, indent=2)}\n")
-                self.output_text.config(state="disabled")
-
-                resp3 = self.http_session.post(login_url, json=payload3, timeout=5)
-
-                self.output_text.config(state="normal")
-                self.output_text.insert(tk.END, f"Response ({resp3.status_code}): {resp3.text}\n")
-                self.output_text.config(state="disabled")
-
-                if resp3.status_code != 200:
-                    self.update_status(f"Step 3 Failed ({resp3.status_code})")
-                    self.root.after(0, lambda: messagebox.showerror("Login Fail", f"Step 3 authentication as {dev_username} failed (code {resp3.status_code})."))
-                    return
-
-                # Extract the final token
-                token3 = ""
-                try:
-                    data3 = resp3.json()
-                    if isinstance(data3, dict):
-                        token3 = data3.get("Data", {}).get("token") or data3.get("sessionToken") or data3.get("session") or ""
-                except Exception:
-                    pass
-                if not token3:
-                    token3 = resp3.cookies.get("session") or ""
-
-                if not token3:
-                    self.update_status("Step 3 Failed: Final token not resolved.")
-                    self.root.after(0, lambda: messagebox.showerror("Login Fail", "Failed to extract final session token in Step 3."))
-                    return
-
-                # Update the final headers and cookies
-                self.session_token_var.set(token3)
-                self.http_session.cookies.clear()
-                self.http_session.headers.update({
-                    "Authorization": f"Bearer {token3}",
-                    "Cookie": f"session={token3}"
-                })
-
+                token3 = self.run_3_step_auth_logic(log_to_gui)
                 self.update_status("Session connection established!")
                 self.root.after(0, self.start_1min_timer)
                 self.root.after(0, lambda: messagebox.showinfo("Authentication Success", f"Session token successfully established: {token3}"))
-
             except Exception as ex:
                 self.update_status(f"Pipeline error: {str(ex)}")
                 self.root.after(0, lambda: messagebox.showerror("Pipeline Error", f"Exception during authentication sequence:\n{str(ex)}"))
@@ -688,6 +833,14 @@ class RMSDeviceTesterApp:
 
     def run_execution_pipeline(self):
         self.pipeline_running = True
+
+        # Synchronize session headers with the GUI token
+        token = self.session_token_var.get().strip()
+        self.http_session.headers.update({
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token}",
+            "Cookie": f"session={token}"
+        })
 
         WRITE_TO_READ_MAPPING = {3: 4, 5: 6, 7: 8, 10: 11, 13: 12, 17: 16, 24: 23, 26: 26}
         selected_role = self.role_var.get()
@@ -740,32 +893,28 @@ class RMSDeviceTesterApp:
             # STEP 1: Execute Write (POST API)
             if (orig_write_acc == "YES" or has_perm_restart) and ("POST" in api["method"].upper() or "GET/POST" in api["method"].upper()):
                 try:
-                    if isinstance(active_payload, dict):
-                        r = self.http_session.post(api["url"], json=active_payload, timeout=5)
-                    elif isinstance(active_payload, str):
-                        r = self.http_session.post(api["url"], data=active_payload, headers={"Content-Type": "text/plain"}, timeout=5)
+                    if api["sr"] == 1:
+                        body_output += "--- STEP 1: RUNNING 3-STEP AUTHENTICATION SEQUENCE ---\n"
+                        def log_to_body(msg):
+                            nonlocal body_output
+                            body_output += msg + "\n"
+                        token_res = self.run_3_step_auth_logic(log_to_body)
+                        write_status = "200 OK"
+                        body_output += f"\nSuccess! Session token established: {token_res}\n"
+                        self.root.after(0, self.start_1min_timer)
                     else:
-                        r = self.http_session.post(api["url"], timeout=5)
+                        if isinstance(active_payload, dict):
+                            r = self.http_session.post(api["url"], json=active_payload, timeout=5)
+                        elif isinstance(active_payload, str):
+                            r = self.http_session.post(api["url"], data=active_payload, headers={"Content-Type": "text/plain"}, timeout=5)
+                        else:
+                            r = self.http_session.post(api["url"], timeout=5)
 
-                    if r.status_code == 401:
-                        write_status = "401 Auth Failure"
-                    else:
-                        write_status = f"{r.status_code} {r.reason}"
-                        if r.status_code == 200 and api["sr"] == 1:
-                            new_token = r.cookies.get("session") or ""
-                            if not new_token:
-                                try:
-                                    new_token = r.json().get("sessionToken") or r.json().get("session") or "active_token"
-                                except Exception:
-                                    new_token = "active_token"
-                            self.session_token_var.set(new_token)
-                            self.http_session.cookies.clear()
-                            self.http_session.headers.update({
-                                "Authorization": f"Bearer {new_token}",
-                                "Cookie": f"session={new_token}"
-                            })
-                            self.root.after(0, self.start_1min_timer)
-                    body_output += f"--- STEP 1: POST WRITE RESPONSE ---\nStatus: {write_status}\n{r.text}\n"
+                        if r.status_code == 401:
+                            write_status = "401 Auth Failure"
+                        else:
+                            write_status = f"{r.status_code} {r.reason}"
+                        body_output += f"--- STEP 1: POST WRITE RESPONSE ---\nStatus: {write_status}\n{r.text}\n"
                 except Exception as ex:
                     write_status = "Error/Offline"
                     body_output += f"--- STEP 1: POST ERROR ---\n{str(ex)}\n"
@@ -802,7 +951,15 @@ class RMSDeviceTesterApp:
             self.root.after(0, lambda s=sr_id, ra=orig_read_acc, wa=orig_write_acc, rs=read_status, ws=write_status: 
                             self.tree.item(s, values=("☑", api["sr"], api["name"], api["method"], api["url"], ra, wa, rs, ws)))
             
-            res_entry = {"sr": api["sr"], "name": api["name"], "read_status": read_status, "write_status": write_status, "body": body_output}
+            res_entry = {
+                "sr": api["sr"],
+                "name": api["name"],
+                "method": api["method"],
+                "url": api["url"],
+                "read_status": read_status,
+                "write_status": write_status,
+                "body": body_output
+            }
             self.execution_results.append(res_entry)
             self.root.after(0, lambda r=res_entry: self.display_output(r))
 
@@ -835,18 +992,169 @@ class RMSDeviceTesterApp:
 
     def export_pdf(self):
         if not self.execution_results:
+            messagebox.showwarning("No Data", "No execution results to export.")
             return
-        doc = SimpleDocTemplate("API_Report.pdf", pagesize=letter)
+
+        pdf_path = "API_Report.pdf"
+        doc = SimpleDocTemplate(
+            pdf_path,
+            pagesize=letter,
+            rightMargin=36,
+            leftMargin=36,
+            topMargin=36,
+            bottomMargin=36
+        )
+
         styles = getSampleStyleSheet()
-        story = [Paragraph("API Execution Report", styles["Heading1"]), Spacer(1, 10)]
-        table_data = [["Sr.", "API Name", "Read Status", "Write Status"]]
+
+        # Define premium typography / colors
+        color_primary = colors.HexColor("#7c3aed") # Deep Purple
+        color_secondary = colors.HexColor("#2563eb") # Royal Blue
+        color_text = colors.HexColor("#1f2937")
+        color_bg_code = colors.HexColor("#f9fafb")
+        color_border_code = colors.HexColor("#e5e7eb")
+
+        title_style = ParagraphStyle(
+            'DocTitle',
+            parent=styles['Heading1'],
+            fontName='Helvetica-Bold',
+            fontSize=20,
+            leading=24,
+            textColor=color_primary,
+            spaceAfter=15
+        )
+
+        section_style = ParagraphStyle(
+            'SectionTitle',
+            parent=styles['Heading2'],
+            fontName='Helvetica-Bold',
+            fontSize=14,
+            leading=18,
+            textColor=color_secondary,
+            spaceBefore=12,
+            spaceAfter=8
+        )
+
+        item_title_style = ParagraphStyle(
+            'ItemTitle',
+            parent=styles['Heading3'],
+            fontName='Helvetica-Bold',
+            fontSize=11,
+            leading=14,
+            textColor=color_primary,
+            spaceBefore=10,
+            spaceAfter=4
+        )
+
+        meta_style = ParagraphStyle(
+            'MetaStyle',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=9,
+            leading=12,
+            textColor=color_text
+        )
+
+        code_style = ParagraphStyle(
+            'CodeStyle',
+            parent=styles['Normal'],
+            fontName='Courier',
+            fontSize=7,
+            leading=9,
+            textColor=colors.HexColor("#374151")
+        )
+
+        story = []
+
+        # 1. Title
+        story.append(Paragraph("RMS Device Suite - API Execution Report", title_style))
+
+        # 2. Metadata Block
+        meta_text = (
+            f"<b>Date/Time:</b> {time.strftime('%Y-%m-%d %H:%M:%S')}<br/>"
+            f"<b>Target AP:</b> {self.ap_name_var.get().strip()}<br/>"
+            f"<b>Role:</b> {self.role_var.get()}<br/>"
+            f"<b>Session Token:</b> {self.session_token_var.get().strip() or 'None'}"
+        )
+        story.append(Paragraph(meta_text, meta_style))
+        story.append(Spacer(1, 15))
+
+        # 3. Overview Table
+        story.append(Paragraph("Execution Overview", section_style))
+        table_data = [["Sr.", "API Name", "Method", "URL", "Read Status", "Write Status"]]
         for item in self.execution_results:
-            table_data.append([str(item["sr"]), item["name"], item["read_status"], item["write_status"]])
-        t = Table(table_data)
-        t.setStyle(TableStyle([('GRID', (0,0), (-1,-1), 0.5, colors.black)]))
-        story.append(t)
-        doc.build(story)
-        messagebox.showinfo("Export Successful", "Report exported to API_Report.pdf")
+            name_p = Paragraph(html.escape(item["name"]), meta_style)
+            url_p = Paragraph(html.escape(item.get("url", "-")), meta_style)
+            table_data.append([
+                str(item["sr"]),
+                name_p,
+                item.get("method", "-"),
+                url_p,
+                item["read_status"],
+                item["write_status"]
+            ])
+
+        col_widths = [25, 120, 50, 185, 80, 80]
+        overview_table = Table(table_data, colWidths=col_widths)
+        overview_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#f3f4f6")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor("#1f2937")),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8.5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#d1d5db")),
+        ]))
+        story.append(overview_table)
+        story.append(Spacer(1, 20))
+
+        # 4. Detailed Logs Section
+        story.append(PageBreak())
+        story.append(Paragraph("Detailed Execution Logs", section_style))
+        story.append(Spacer(1, 10))
+
+        for item in self.execution_results:
+            details_flowables = []
+            details_flowables.append(Paragraph(f"Sr {item['sr']}: {html.escape(item['name'])}", item_title_style))
+
+            info_text = (
+                f"<b>URL:</b> {html.escape(item.get('url', '-'))} | "
+                f"<b>Method:</b> {item.get('method', '-')} | "
+                f"<b>Read Status:</b> {item['read_status']} | "
+                f"<b>Write Status:</b> {item['write_status']}"
+            )
+            details_flowables.append(Paragraph(info_text, meta_style))
+            details_flowables.append(Spacer(1, 5))
+
+            escaped_body = html.escape(item["body"])
+            escaped_body = escaped_body.replace("\n", "<br/>").replace(" ", "&nbsp;")
+            body_p = Paragraph(escaped_body, code_style)
+
+            code_table = Table([[body_p]], colWidths=[540])
+            code_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), color_bg_code),
+                ('GRID', (0, 0), (-1, -1), 0.5, color_border_code),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+
+            details_flowables.append(code_table)
+            details_flowables.append(Spacer(1, 12))
+
+            story.append(KeepTogether(details_flowables))
+
+        try:
+            doc.build(story)
+            messagebox.showinfo("Export Successful", f"Detailed report exported successfully to {pdf_path}")
+        except Exception as ex:
+            messagebox.showerror("Export Error", f"Failed to build PDF report:\n{str(ex)}")
 
     def export_csv(self):
         if not self.execution_results:
