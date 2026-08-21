@@ -179,48 +179,16 @@ class RMSDeviceTesterApp:
         main_v_paned = ttk.PanedWindow(root, orient="vertical")
         main_v_paned.pack(fill="both", expand=True, padx=10, pady=5)
 
-        # Preview Frame (Contains side-by-side Request Preview and Editor)
-        preview_frame = ttk.LabelFrame(main_v_paned, text=" Request Details & Interactive Editor ", padding=5)
+        # Preview Frame (Contains Request Details - double click table row to edit)
+        preview_frame = ttk.LabelFrame(main_v_paned, text=" Request Details (Double-Click table row to edit API/Payload) ", padding=5)
         main_v_paned.add(preview_frame, weight=2)
 
-        preview_container = ttk.Frame(preview_frame)
-        preview_container.pack(fill="both", expand=True)
-
-        left_preview = ttk.Frame(preview_container)
-        left_preview.pack(side="left", fill="both", expand=True, padx=(0, 5))
-
         self.preview_text = scrolledtext.ScrolledText(
-            left_preview, height=6, font=("Consolas", 9), wrap="word",
+            preview_frame, height=6, font=("Consolas", 9), wrap="word",
             bg=self.BG_CARD, fg=self.FG_TEXT, insertbackground=self.FG_TEXT,
             highlightthickness=1, highlightbackground=self.BG_BORDER, relief="flat"
         )
         self.preview_text.pack(fill="both", expand=True)
-
-        right_edit = ttk.LabelFrame(preview_container, text=" Edit Selected API Endpoint ", padding=8, width=480)
-        right_edit.pack(side="right", fill="both", expand=False)
-        right_edit.pack_propagate(False)
-
-        # Editable URL field
-        ttk.Label(right_edit, text="URL:").grid(row=0, column=0, sticky="w", pady=2)
-        self.edit_url_var = tk.StringVar()
-        self.edit_url_entry = ttk.Entry(right_edit, textvariable=self.edit_url_var, font=("Segoe UI", 9))
-        self.edit_url_entry.grid(row=0, column=1, sticky="ew", padx=5, pady=2)
-
-        # Editable Payload field
-        ttk.Label(right_edit, text="Payload:").grid(row=1, column=0, sticky="nw", pady=2)
-        self.edit_payload_text = tk.Text(
-            right_edit, height=4, font=("Consolas", 9), wrap="none",
-            bg=self.BG_CARD, fg=self.FG_TEXT, insertbackground=self.FG_TEXT,
-            highlightthickness=1, highlightbackground=self.BG_BORDER, relief="flat"
-        )
-        self.edit_payload_text.grid(row=1, column=1, sticky="nsew", padx=5, pady=2)
-
-        # Apply Changes Button
-        self.apply_btn = ttk.Button(right_edit, text="Apply Changes", command=self.apply_api_changes)
-        self.apply_btn.grid(row=2, column=1, sticky="e", padx=5, pady=5)
-
-        right_edit.columnconfigure(1, weight=1)
-        right_edit.rowconfigure(1, weight=1)
 
         # Main Table & Response Area
         paned = ttk.PanedWindow(main_v_paned, orient="horizontal")
@@ -251,6 +219,7 @@ class RMSDeviceTesterApp:
         tree_scroll.pack(side="right", fill="y")
 
         self.tree.bind("<<TreeviewSelect>>", self.on_tree_select)
+        self.tree.bind("<Double-1>", self.popup_edit_dialog)
 
         right_frame = ttk.LabelFrame(paned, text=" Received Response Output ", padding=5)
         paned.add(right_frame, weight=2)
@@ -280,21 +249,21 @@ class RMSDeviceTesterApp:
         self.populate_table()
 
     def setup_styles(self):
-        """Configure modern Catppuccin Mocha-style dark theme for ttk widgets"""
+        """Configure modern light theme with white/gray background for ttk widgets"""
         self.style = ttk.Style()
         self.style.theme_use("clam")
 
         # Color codes
-        self.BG_MAIN = "#181825"
-        self.BG_CARD = "#1e1e2e"
-        self.BG_BORDER = "#313244"
-        self.FG_TEXT = "#cdd6f4"
-        self.FG_MUTED = "#a6adc8"
-        self.COLOR_ACCENT = "#cba6f7" # Lavender
-        self.COLOR_BLUE = "#89b4fa"   # Blue
-        self.COLOR_GREEN = "#a6e3a1"  # Green
-        self.COLOR_YELLOW = "#f9e2af" # Yellow
-        self.COLOR_RED = "#f38ba8"    # Red
+        self.BG_MAIN = "#f4f4f9"
+        self.BG_CARD = "#ffffff"
+        self.BG_BORDER = "#d1d5db"
+        self.FG_TEXT = "#1f2937"
+        self.FG_MUTED = "#6b7280"
+        self.COLOR_ACCENT = "#7c3aed" # Deep Purple
+        self.COLOR_BLUE = "#2563eb"   # Royal Blue
+        self.COLOR_GREEN = "#16a34a"  # Green
+        self.COLOR_YELLOW = "#ca8a04" # Yellow
+        self.COLOR_RED = "#dc2626"    # Red
 
         # Tkinter main background color
         self.root.configure(bg=self.BG_MAIN)
@@ -311,25 +280,25 @@ class RMSDeviceTesterApp:
         self.style.configure("Sub.TLabel", font=("Segoe UI", 8, "italic"), foreground=self.FG_MUTED)
 
         # Standard Buttons
-        self.style.configure("TButton", background="#313244", foreground=self.FG_TEXT, borderwidth=1, font=("Segoe UI", 9, "bold"), focuscolor="")
+        self.style.configure("TButton", background="#e5e7eb", foreground=self.FG_TEXT, borderwidth=1, font=("Segoe UI", 9, "bold"), focuscolor="")
         self.style.map("TButton",
-            background=[("active", "#45475a"), ("disabled", "#11111b")],
-            foreground=[("disabled", "#585b70")]
+            background=[("active", "#d1d5db"), ("disabled", "#f3f4f6")],
+            foreground=[("disabled", "#9ca3af")]
         )
 
         # Accent Primary Actions
-        self.style.configure("Accent.TButton", background=self.COLOR_BLUE, foreground="#11111b", borderwidth=0, font=("Segoe UI", 9, "bold"))
-        self.style.map("Accent.TButton", background=[("active", "#b4befe"), ("disabled", "#11111b")])
+        self.style.configure("Accent.TButton", background=self.COLOR_BLUE, foreground="#ffffff", borderwidth=0, font=("Segoe UI", 9, "bold"))
+        self.style.map("Accent.TButton", background=[("active", "#1d4ed8"), ("disabled", "#f3f4f6")], foreground=[("disabled", "#9ca3af")])
 
         # Input elements
         self.style.configure("TEntry", fieldbackground=self.BG_CARD, foreground=self.FG_TEXT, insertcolor=self.FG_TEXT, bordercolor=self.BG_BORDER)
-        self.style.configure("TCombobox", fieldbackground=self.BG_CARD, background="#313244", foreground=self.FG_TEXT, bordercolor=self.BG_BORDER)
+        self.style.configure("TCombobox", fieldbackground=self.BG_CARD, background="#e5e7eb", foreground=self.FG_TEXT, bordercolor=self.BG_BORDER)
         self.style.map("TCombobox", fieldbackground=[("readonly", self.BG_CARD)], foreground=[("readonly", self.FG_TEXT)])
 
         # Treeview styling
         self.style.configure("Treeview", background=self.BG_CARD, fieldbackground=self.BG_CARD, foreground=self.FG_TEXT, bordercolor=self.BG_BORDER, rowheight=26, font=("Segoe UI", 9))
-        self.style.configure("Treeview.Heading", background="#313244", foreground=self.FG_TEXT, relief="flat", font=("Segoe UI", 9, "bold"))
-        self.style.map("Treeview", background=[("selected", "#45475a")], foreground=[("selected", "#cba6f7")])
+        self.style.configure("Treeview.Heading", background="#e5e7eb", foreground=self.FG_TEXT, relief="flat", font=("Segoe UI", 9, "bold"))
+        self.style.map("Treeview", background=[("selected", "#d1d5db")], foreground=[("selected", self.COLOR_ACCENT)])
 
     def generate_randomized_payload(self, api):
         payload = api.get("payload")
@@ -387,17 +356,6 @@ class RMSDeviceTesterApp:
         if api:
             self.update_request_preview(api)
             
-            # Populate interactive URL & Payload Editor fields
-            self.edit_url_var.set(api.get("url", ""))
-            self.edit_payload_text.delete("1.0", tk.END)
-            
-            payload = api.get("payload")
-            if payload is not None:
-                if isinstance(payload, (dict, list)):
-                    self.edit_payload_text.insert(tk.END, json.dumps(payload, indent=2))
-                else:
-                    self.edit_payload_text.insert(tk.END, str(payload))
-            
             # Display response output if testing has been done for this API
             res = next((r for r in self.execution_results if str(r["sr"]) == str(sr_val)), None)
             if res:
@@ -408,51 +366,103 @@ class RMSDeviceTesterApp:
                 self.output_text.insert(tk.END, "No execution result yet. Run the APIs to see output.")
                 self.output_text.config(state="disabled")
 
-    def apply_api_changes(self):
-        """Update selected API endpoint URL and Payload in-memory and refresh the table"""
+    def popup_edit_dialog(self, event):
+        """Displays a modal Toplevel window to edit the URL and Payload directly"""
         selected_item = self.tree.selection()
         if not selected_item:
-            messagebox.showwarning("No Selection", "Please select an API from the table first.")
             return
-
+        
         sr_val = self.tree.item(selected_item[0], "values")[1]
         api = next((a for a in API_ENDPOINTS if str(a["sr"]) == str(sr_val)), None)
         if not api:
             return
 
-        new_url = self.edit_url_var.get().strip()
-        new_payload_str = self.edit_payload_text.get("1.0", tk.END).strip()
+        # Create Dialog Toplevel Window
+        dialog = tk.Toplevel(self.root)
+        dialog.title(f"Edit API Endpoint - {api['name']}")
+        dialog.geometry("620x460")
+        dialog.transient(self.root)
+        dialog.grab_set()
+        dialog.configure(bg=self.BG_MAIN)
 
-        if not new_url:
-            messagebox.showerror("Validation Error", "URL cannot be empty.")
-            return
+        # Center Dialog Popup relative to main app window
+        dialog.update_idletasks()
+        width = dialog.winfo_width()
+        height = dialog.winfo_height()
+        x = self.root.winfo_x() + (self.root.winfo_width() // 2) - (width // 2)
+        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - (height // 2)
+        dialog.geometry(f"{width}x{height}+{x}+{y}")
 
-        # Attempt to parse payload
-        if not new_payload_str:
-            new_payload = None
-        elif new_payload_str.startswith("-----BEGIN"):
-            new_payload = new_payload_str
-        else:
-            try:
-                new_payload = json.loads(new_payload_str)
-            except Exception:
-                # Treat as raw string if JSON parsing fails
+        # Modal layout frame
+        main_frame = ttk.Frame(dialog, padding=15)
+        main_frame.pack(fill="both", expand=True)
+
+        ttk.Label(main_frame, text=f"Modifying #{api['sr']}: {api['name']}", font=("Segoe UI", 11, "bold"), foreground=self.COLOR_ACCENT).pack(anchor="w", pady=(0, 15))
+
+        # Endpoint URL field
+        ttk.Label(main_frame, text="URL:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(5, 2))
+        url_var = tk.StringVar(value=api.get("url", ""))
+        url_entry = ttk.Entry(main_frame, textvariable=url_var, font=("Segoe UI", 9))
+        url_entry.pack(fill="x", pady=(0, 10))
+        url_entry.focus_set()
+
+        # Payload ScrolledText field
+        ttk.Label(main_frame, text="Payload (JSON Format / raw certificate PEM):", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(5, 2))
+        payload_text = scrolledtext.ScrolledText(
+            main_frame, height=9, font=("Consolas", 9), wrap="none",
+            bg=self.BG_CARD, fg=self.FG_TEXT, insertbackground=self.FG_TEXT,
+            highlightthickness=1, highlightbackground=self.BG_BORDER, relief="flat"
+        )
+        payload_text.pack(fill="both", expand=True, pady=(0, 15))
+
+        # Prepopulate existing payload values
+        payload = api.get("payload")
+        if payload is not None:
+            if isinstance(payload, (dict, list)):
+                payload_text.insert(tk.END, json.dumps(payload, indent=2))
+            else:
+                payload_text.insert(tk.END, str(payload))
+
+        # Bottom buttons
+        btn_frame = ttk.Frame(main_frame)
+        btn_frame.pack(fill="x", side="bottom")
+
+        def save_and_close():
+            new_url = url_var.get().strip()
+            new_payload_str = payload_text.get("1.0", tk.END).strip()
+
+            if not new_url:
+                messagebox.showerror("Validation Error", "URL field cannot be empty.", parent=dialog)
+                return
+
+            if not new_payload_str:
+                new_payload = None
+            elif new_payload_str.startswith("-----BEGIN"):
                 new_payload = new_payload_str
+            else:
+                try:
+                    new_payload = json.loads(new_payload_str)
+                except Exception:
+                    new_payload = new_payload_str
 
-        # Update lists
-        api["url"] = new_url
-        api["payload"] = new_payload
+            # Update details in endpoint object
+            api["url"] = new_url
+            api["payload"] = new_payload
 
-        # Update Treeview row display (column index 4 is the URL)
-        values = list(self.tree.item(selected_item[0], "values"))
-        values[4] = new_url
-        self.tree.item(selected_item[0], values=values)
+            # Sync Treeview display with updated URL
+            values = list(self.tree.item(selected_item[0], "values"))
+            values[4] = new_url
+            self.tree.item(selected_item[0], values=values)
 
-        # Refresh Preview Text Area
-        self.update_request_preview(api)
+            # Re-render Request Details preview
+            self.update_request_preview(api)
 
-        self.update_status(f"Updated endpoint: {api['name']}")
-        messagebox.showinfo("Success", f"Endpoint '{api['name']}' changes applied.")
+            self.update_status(f"Saved changes for '{api['name']}'")
+            dialog.destroy()
+            messagebox.showinfo("Update Successful", f"Successfully updated '{api['name']}' parameters.")
+
+        ttk.Button(btn_frame, text="Cancel", command=dialog.destroy).pack(side="right", padx=5)
+        ttk.Button(btn_frame, text="Save Changes", command=save_and_close, style="Accent.TButton").pack(side="right", padx=5)
 
     def start_1min_timer(self):
         self.session_expire_time = time.time() + 60
